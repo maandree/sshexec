@@ -1,6 +1,10 @@
 NAME
 	sshexec - run a command through ssh(1) with normal command syntax
 
+SYNOPSIS
+	sshexec [{ [ssh=ssh-command] [dir=directory] }] [ssh-option] ...
+	        destination command [argument] ...
+
 DESCRIPTION
 	The sshexec utility is a wrapper for SSH that makes it easy to
 	run commands directly in the SSH command.
