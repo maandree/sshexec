@@ -6,8 +6,8 @@ sshexec - run a command through ssh(1) with normal command syntax
 .SH SYNOPSIS
 .B sshexec
 .RB [ {
-.RI [\fBssh=\fP ssh-command ]
-.RI [\fBdir=\fP directory ]
+.RI [\fBssh= ssh-command ]
+.RI [\fBdir= directory ]
 .BR } ]
 [ssh-option] ...\,
 .I destination
@@ -15,13 +15,115 @@ sshexec - run a command through ssh(1) with normal command syntax
 .RI [ argument ]\ ...\,
 
 .SH DESCRIPTION
-TODO
+The
+.B sshexec
+utility is a wrapper for SSH that makes it easy to run commands
+directly in the SSH command.
+
+.B sshexec
+passes any argument after
+.B }
+to
+.I ssh-command
+.RB ( ssh
+if not specified), and only modifies
+.I command
+.RB [ argument ]\ ...\,
+and inserts extra arguments after
+.I destination
+(it may also add a
+.B --
+argument immediately before
+.IR destination )
+to cause the remote shell it change working directory to
+.IR directory ,
+if specified, and execute the provided
+.I command
+and
+.IR argument s
+as a regular command rather than as shell code joined
+by together by spaces.
 
 .SH OPTIONS
-TODO
+.B sshexec
+options may be placed at the very beginning enclosed with
+the arguments
+.B {
+and
+.BR } .
+.B sshexec
+options, if any, shall be placed in the same
+.B {
+.BR } -group.
+Any other option will be passed as is to the
+.BR ssh (1)
+utility or
+.IR ssh-command .
+The
+.B sshexec
+utility has a build it list of options recognised by the
+.BR ssh (1)
+utility and will not allow anything matching this list.
+The
+.B sshexec
+utility does not allow mixing options and operands: no
+option may be placed after
+.IR destination ,
+such options will be treated as the
+.I command
+or an
+.IR argument .
+.PP
+The following
+.B sshexec
+options are supported:
+.TP
+.BI ssh= ssh-command
+Instead of looking for
+.B ssh
+in
+.IR PATH ,
+the
+.B sshexec
+utility shall use
+.IR ssh-command ,
+which it will look for in
+.I PATH
+if it is only a file name (does not contain a slash
+.RB ( / )).
+.TP
+.BI dir= directory
+In the remote, change working directory to
+.I directory
+before executing
+.IR command .
 
 .SH OPERANDS
-TODO
+The following operands are supported:
+.TP
+.I destination
+This operand is passed as is (without validation) to the
+.BR ssh (1)
+utility. The
+.BR ssh (1)
+utility will expect it the be either in the form
+.RI [ user\fP\fB@ ] hostname
+or in the form
+.BR ssh:// [\fIuser @ ]\fIhostname\fP[ : \fIport\fP].
+.TP
+.IR command \ [ argument ]\ ...\,
+Whereas the
+.BR ssh (1)
+utility would simply join the
+.I command
+and
+.I argument
+arguments with a space between each of them as pass it
+to the remote shell for execution, the
+.B sshexec
+utility forces the remote shell to treat each of the
+as separate arguments and cause the shell to executing
+them as a non-builtin command.
 
 .SH STDIN
 The
@@ -40,9 +142,13 @@ Default. See to the Base Definitions volume of POSIX.1-2017, Section 8.3, Other 
 This environment variable affects where the
 .B sshexec
 utility can find the
-.B ssh
+.BR ssh (1)
 utility or
 .IR ssh-command .
+.PP
+Other environment variables may affect the execution of the
+.BR ssh (1)
+utility.
 
 .SH ASYNCHRONOUS EVENTS
 Default.
@@ -67,7 +173,7 @@ None.
 The
 .B sshexec
 utility exits with the exit status of the
-.B ssh
+.BR ssh (1)
 utility or with 255 if an error occurred.
 
 .SH CONSEQUENCES OF ERRORS
@@ -86,7 +192,26 @@ None.
 None.
 
 .SH BUGS
-None.
+The remote shell must be sufficiently similar to
+.BR sh (1posix).
+Namely, it must support the
+.B cd
+builtin command and the commands
+.B exec
+and
+.B printf
+is expected by POSIX. Additionally, it must support
+.BR \(dq$(\ )\(dq ,
+.BR \(aq\ \(aq ,
+and
+.BR && ,
+and argument separation with the SP character.
+The remote shell must also not treat any alphanumeric
+character, underscore
+.RB ( _ )
+or slash
+.RB ( / )
+as special characters.
 
 .SH FUTURE DIRECTIONS
 None.
