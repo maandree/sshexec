@@ -18,7 +18,7 @@ static const char *argv0 = "sshexec";
 static void
 usage(void)
 {
-	exitf("usage: %s { %s } [ssh-option] ... destination command [argument] ...\n",
+	exitf("usage: %s [{ %s }] [ssh-option] ... destination command [argument] ...\n",
 	      argv0, "[ssh=command] [dir=directory]");
 }
 
