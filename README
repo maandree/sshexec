@@ -1,0 +1,56 @@
+NAME
+	sshexec - run a command through ssh(1) with normal command syntax
+
+DESCRIPTION
+	The sshexec utility is a wrapper for SSH that makes it easy to
+	run commands directly in the SSH command.
+
+	sshexec passes any argument after } to ssh-command (ssh if not
+	specified), and only modifies command [argument] ... and inserts
+	extra arguments after destination (it may also add a -- argument
+	immediately before destination) to cause the remote shell it
+	change working directory to directory, if specified, and execute
+	the provided command and arguments as a regular command rather
+	than as shell code joined by together by spaces.
+
+OPTIONS
+	sshexec options may be placed at the very beginning enclosed
+	with the arguments { and }. sshexec options, if any, shall be
+	placed in the same { }-group. Any other option will be passed
+	as is to the ssh(1) utility or ssh-command. The sshexec utility
+	has a build it list of options recognised by the ssh(1) utility
+	and will not allow anything matching this list. The sshexec
+	utility does not allow mixing options and operands: no option
+	may be placed after destination, such options will be treated
+	as the command or an argument.
+
+	The following sshexec options are supported:
+
+	ssh=ssh-command
+		Instead of looking for ssh in PATH, the sshexec utility
+		shall use ssh-command, which it will look for in PATH
+		if it is only a file name (does not contain a slash (/)).
+
+	dir=directory
+		In the remote, change working directory to directory
+		before executing command.
+
+OPERANDS
+	The following operands are supported:
+
+	destination
+		This operand is passed as is (without validation) to
+		the ssh(1) utility. The ssh(1) utility will expect it
+		the be either in the form [user@]hostname or in the
+		form ssh://[user@]hostname[:port].
+
+	command [argument] ...
+		Whereas the ssh(1) utility would simply join the command
+		and argument arguments with a space between each of
+		them as pass it to the remote shell for execution, the
+		sshexec utility forces the remote shell to treat each
+		of the as separate arguments and cause the shell to
+		executing them as a non-builtin command.
+
+SEE ALSO
+	ssh(1)
