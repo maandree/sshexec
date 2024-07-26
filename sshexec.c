@@ -19,8 +19,15 @@ static void
 usage(void)
 {
 	exitf("usage: %s [{ %s }] [ssh-option] ... destination command [argument] ...\n",
-	      argv0, "[ssh=command] [dir=directory]");
+	      argv0, "[ssh=command] [dir=directory] [[fd]{>,>>,>|,<>}[&]=file]");
 }
+
+
+struct redirection {
+	const char *asis;
+	const char *escape;
+};
+
 
 static const enum optclass {
 	NO_RECOGNISED = 0,
@@ -54,7 +61,7 @@ static size_t command_len = 0;
 	} while (0)
 
 #define build_command_asis(S)\
-	build_command(S, sizeof(S) - 1)
+	build_command(S, strlen(S))
 
 #define finalise_command()\
 	build_command("", 1)
@@ -122,8 +129,10 @@ main(int argc_unused, char *argv[])
 {
 	const char *dir = NULL;
 	const char *ssh = NULL;
+	struct redirection *redirections = NULL;
+	size_t nredirections = 0;
 	const char *destination;
-	char **opts;
+	char **opts, *p;
 	size_t nopts;
 	enum optclass class;
 	const char *arg;
@@ -142,17 +151,51 @@ main(int argc_unused, char *argv[])
 			usage();\
 		continue;\
 	}
+
 	if (*argv && !strcmp(*argv, "{")) {
 		argv++;
 		for (; *argv && strcmp(*argv, "}"); argv++) {
 			STORE_OPT(&ssh, "ssh")
 			STORE_OPT(&dir, "dir")
-			usage();
+
+			p = *argv;
+			while (isdigit(*p))
+				p++;
+			if (p[0] == '>')
+				p = &p[1 + (p[1] == '>' || p[1] == '|')];
+			else if (p[0] == '<')
+				p = &p[1 + (p[1] == '>')];
+			else
+				usage();
+			if (p[p[0] == '&'] != '=')
+				usage(); 
+			redirections = realloc(redirections, (nredirections + 1U) * sizeof(*redirections));
+			if (!redirections)
+				exitf("%s: could not allocate enough memory\n", argv0);
+			if (*p == '&') {
+				p = &p[1];
+				memmove(p, &p[1], strlen(&p[1]) + 1U);
+				if (isdigit(*p)) {
+					p++;
+					while (isdigit(*p))
+						p++;
+				} else if (*p == '-') {
+					p++;
+				}
+				if (*p)
+					usage();
+				redirections[nredirections].escape = NULL;
+			} else {
+				*p++ = '\0';
+				redirections[nredirections].escape = p;
+			}
+			redirections[nredirections++].asis = *argv;
 		}
 		if (!*argv)
 			usage();
 		argv++;
 	}
+
 #undef STORE_OPT
 
 	if (!ssh)
@@ -201,6 +244,14 @@ main(int argc_unused, char *argv[])
 	for (; *argv; argv++) {
 		build_command_asis(" ");
 		build_command_escape(*argv);
+	}
+	for (i = 0; i < nredirections; i++) {
+		build_command_asis(" ");
+		build_command_asis(redirections[i].asis);
+		if (redirections[i].escape) {
+			build_command_asis(" ");
+			build_command_escape(redirections[i].escape);
+		}
 	}
 	finalise_command();
 

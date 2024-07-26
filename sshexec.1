@@ -6,8 +6,9 @@ sshexec - run a command through ssh(1) with normal command syntax
 .SH SYNOPSIS
 .B sshexec
 .RB [ {
-.RI [\fBssh= ssh-command ]
-.RI [\fBdir= directory ]
+.RI [\fBssh=\fP ssh-command ]
+.RI [\fBdir=\fP directory ]
+.RB [[\fIfd\fP]{ > , >> , >| , < , <> }[ & ] = \fIfile\fP]
 .BR } ]
 [ssh-option] ...\,
 .I destination
@@ -97,6 +98,91 @@ In the remote, change working directory to
 .I directory
 before executing
 .IR command .
+.TP
+.IB \fR[\fPfd\fP]\fP >= file
+After changing working directory (assuming one is specified),
+create or truncate the specified
+.I file
+and open it for writing, using file descriptor number
+.IR fd .
+(Default
+.I fd
+is 1 (standard output).)
+.TP
+.IB \fR[\fPfd\fP]\fP >>= file
+After changing working directory (assuming one is specified),
+create the specified
+.I file
+if it does not exist and open it for writing in
+append-mode, using file descriptor number
+.IR fd .
+(Default
+.I fd
+is 1 (standard output).)
+.TP
+.IB \fR[\fPfd\fP]\fP >|= file
+After changing working directory (assuming one is specified),
+create the specified
+.IR file ,
+but fail if it already exists, and open it for writing,
+using file descriptor number
+.IR fd .
+(Default
+.I fd
+is 1 (standard output).)
+.TP
+.IB \fR[\fPfd\fP]\fP <= file
+After changing working directory (assuming one is specified),
+open the specified
+.IR file ,
+for reading, using file descriptor number
+.IR fd .
+(Default
+.I fd
+is 0 (standard input).)
+.TP
+.IB \fR[\fPfd\fP]\fP <>= file
+After changing working directory (assuming one is specified),
+open the specified
+.IR file ,
+for reading and writing, creating it if it does not
+already exist, using file descriptor number
+.IR fd .
+(Default
+.I fd
+is 0 (standard input).)
+.TP
+.IB \fR[\fPfd\fP]\fP \fR{\fP>\fP,\fP>>\fP,\fP>|\fP}\fP&= file
+Duplicate the file descriptor
+.I fd
+giving the new file descriptor the number
+.IR file .
+(Default
+.I fd
+is 1 (standard output).)
+.TP
+.IB \fR[\fPfd\fP]\fP \fR{\fP>\fP,\fP>>\fP,\fP>|\fP}\fP&=-
+Close the file descriptor
+.IR fd .
+(Default
+.I fd
+is 1 (standard output).)
+.TP
+.IB \fR[\fPfd\fP]\fP \fR{\fP<\fP,\fP<>\fP}\fP&= file
+Duplicate the file descriptor
+.I fd
+giving the new file descriptor the number
+.IR file .
+(Default
+.I fd
+is 0 (standard input).)
+.TP
+.IB \fR[\fPfd\fP]\fP \fR{\fP<\fP,\fP<>\fP}\fP&=-
+Close the file descriptor
+.IR fd .
+(Default
+.I fd
+is 0 (standard input).)
 
 .SH OPERANDS
 The following operands are supported:
