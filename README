@@ -3,8 +3,9 @@ NAME
 
 SYNOPSIS
 	sshexec [{ [ssh=ssh-command] [dir=directory] [cd=(strict|lax)]
-	        [[fd]{>,>>,>|,<,<>}[&]=file] }] [ssh-option] ...
-	        destination command [argument] ...
+	        [[fd]{>,>>,>|,<,<>}[&]=file] [asis=asis-marker
+		[nasis=asis-count]] }] [ssh-option] ... destination
+		command [argument] ...
 
 DESCRIPTION
 	The sshexec utility is a wrapper for SSH that makes it easy to
@@ -102,6 +103,17 @@ OPTIONS
 	[fd]{<,<>}&=-
 		Close the file descriptor fd. (Default fd is 0
 		(standard input).)
+
+	asis=asis-marker
+		Any argument equal to asis-marker will be skipped over
+		and instead the next argument (regardless of whether
+		it to is equal to asis-marker) will be interpreted as
+		raw shell code string that shall be inserted without
+		escaping.
+
+	masis=asis-count
+		If specified, asis-marker shall only have it's specified
+		affect up to asis-count times.
 
 OPERANDS
 	The following operands are supported:

@@ -19,7 +19,8 @@ static void
 usage(void)
 {
 	exitf("usage: %s [{ %s }] [ssh-option] ... destination command [argument] ...\n",
-	      argv0, "[ssh=command] [dir=directory] [cd=(strict|lax)] [[fd]{>,>>,>|,<>}[&]=file]");
+	      argv0, "[ssh=command] [dir=directory] [cd=(strict|lax)] [[fd]{>,>>,>|,<>}[&]=file] "
+	             "[asis=asis-marker [nasis=asis-count]]");
 }
 
 
@@ -130,6 +131,8 @@ main(int argc_unused, char *argv[])
 	const char *dir = NULL;
 	const char *ssh = NULL;
 	const char *cd = NULL;
+	const char *asis = NULL;
+	const char *nasis_str = NULL;
 	struct redirection *redirections = NULL;
 	size_t nredirections = 0;
 	char *destination;
@@ -142,6 +145,8 @@ main(int argc_unused, char *argv[])
 	const char **args;
 	size_t i;
 	int strict_cd;
+	unsigned long long int nasis = ULLONG_MAX;
+	int next_asis;
 
 	(void) argc_unused;
 
@@ -160,7 +165,8 @@ main(int argc_unused, char *argv[])
 		for (; *argv && strcmp(*argv, "}"); argv++) {
 			STORE_OPT(&ssh, "ssh")
 			STORE_OPT(&dir, "dir")
-			STORE_OPT(&cd, "cd")
+			STORE_OPT(&asis, "asis")
+			STORE_OPT(&nasis_str, "nasis")
 
 			p = *argv;
 			while (isdigit(*p))
@@ -211,6 +217,16 @@ main(int argc_unused, char *argv[])
 		strict_cd = 0;
 	else
 		usage();
+
+	if (nasis_str) {
+		char *end;
+		if (!asis || !isdigit(*nasis_str))
+			usage();
+		errno = 0;
+		nasis = strtoull(nasis_str, &end, 10);
+		if ((!nasis && errno) || *end)
+			usage();
+	}
 
 	opts = argv;
 	nopts = 0;
@@ -275,11 +291,27 @@ dest_dir_checked:
 		build_command_escape(dir);
 		build_command_asis(strict_cd ? " && " : " ; ");
 	}
-	build_command_asis("exec env --");
+	if (asis)
+		build_command_asis("( env --");
+	else
+		build_command_asis("exec env --");
+	next_asis = 0;
 	for (; *argv; argv++) {
-		build_command_asis(" ");
-		build_command_escape(*argv);
+		if (asis && nasis && !strcmp(*argv, asis)) {
+			nasis -= 1U;
+			next_asis = 1;
+		} else {
+			build_command_asis(" ");
+			if (next_asis) {
+				next_asis = 0;
+				build_command_asis(*argv);
+			} else {
+				build_command_escape(*argv);
+			}
+		}
 	}
+	if (asis)
+		build_command_asis(" )");
 	for (i = 0; i < nredirections; i++) {
 		build_command_asis(" ");
 		build_command_asis(redirections[i].asis);

@@ -10,6 +10,8 @@ sshexec - run a command through ssh(1) with normal command syntax
 .RI [\fBdir=\fP directory ]
 .RB [ cd= ( strict | lax )]
 .RB [[\fIfd\fP]{ > , >> , >| , < , <> }[ & ] = \fIfile\fP]
+.RB [ asis= \fIasis-marker\fP
+.RB [ nasis= \fIasis-count\fP]]
 .BR } ]
 .RI [ ssh-option ]\ ...\,
 .I destination
@@ -206,6 +208,24 @@ Close the file descriptor
 (Default
 .I fd
 is 0 (standard input).)
+.TP
+.BI asis= asis-marker
+Any
+.I argument
+equal to
+.I asis-marker
+will be skipped over and instead the next argument
+(regardless of whether it to is equal to
+.IR asis-marker )
+will be interpreted as raw shell code string that
+shall be inserted without escaping.
+.TP
+.BI masis= asis-count
+If specified,
+.I asis-marker
+shall only have it's specified affect up to
+.I asis-count
+times.
 
 .SH OPERANDS
 The following operands are supported:
