@@ -245,7 +245,7 @@ main(int argc_unused, char *argv[])
 		build_command_escape(dir);
 		build_command_asis(" && ");
 	}
-	build_command_asis("exec --");
+	build_command_asis("exec env --");
 	for (; *argv; argv++) {
 		build_command_asis(" ");
 		build_command_escape(*argv);
