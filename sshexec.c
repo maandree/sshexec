@@ -60,26 +60,6 @@ struct redirection {
 };
 
 
-static const enum optclass {
-	NO_RECOGNISED = 0,
-	NO_ARGUMENT,
-	MANDATORY_ARGUMENT
-} sshopts[(size_t)1 << CHAR_BIT] = {
-#define X(F) [F] = NO_ARGUMENT
-	X('4'), X('6'), X('A'), X('a'), X('C'), X('f'), X('G'),
-	X('g'), X('K'), X('k'), X('M'), X('N'), X('n'), X('q'),
-	X('s'), X('T'), X('t'), X('V'), X('v'), X('X'), X('x'),
-	X('Y'), X('y'),
-#undef X
-#define X(F) [F] = MANDATORY_ARGUMENT
-	X('B'), X('b'), X('c'), X('D'), X('E'), X('e'), X('F'),
-	X('I'), X('i'), X('J'), X('L'), X('l'), X('m'), X('O'),
-	X('o'), X('P'), X('p'), X('Q'), X('R'), X('S'), X('W'),
-	X('w')
-#undef X
-};
-
-
 /**
  * Command being constructor for ssh(1)
  */
@@ -375,6 +355,45 @@ extract_directory_from_destination(void)
 
 
 /**
+ * Get an environment variable or a default value
+ * 
+ * @param   var  The name of the environment variable
+ * @param   def  The default value to return if the environment variable is not set
+ * @return       The value of the environment variable, or the default value if unset
+ */
+static const char *
+get(const char *var, const char *def)
+{
+	const char *ret = getenv(var);
+	return ret ? ret : def;
+}
+
+
+/**
+ * Check if a string appears as a word in another string
+ * 
+ * @param   set     The string to search in; words are separated by spaces
+ * @param   sought  The string to search for
+ * @return          1 if the string is found, 0 otherwise
+ */
+#if defined(__GNUC__)
+__attribute__((__pure__))
+#endif
+static int
+contains(const char *set, const char *sought)
+{
+	size_t m, n = strlen(sought);
+	const char *p, *q;
+	for (p = set; (q = strchr(p, ' ')); p = &q[1]) {
+		m = (size_t)(q - p);
+		if (m == n && !strncmp(p, sought, n))
+			return 1;
+	}
+	return !strcmp(p, sought);
+}
+
+
+/**
  * Read and parse the sshexec options
  *
  * @param   argv  The arguments from the command line after
@@ -495,42 +514,107 @@ end_of_options:
  *                     arguments, this includes all arguments the
  *                     return value offsets `argv` except the "--"
  *                     (if there is one), so this includes both
- *                     the options themselves and their arguments
+ *                     the options themselves and their arguments,
+ *                     and joined options countas one
  * @return             `argv` offset to skip pass any ssh(1) options,
  *                     and any "--" immediately after them
  */
 static char **
 parse_ssh_options(char *argv[], size_t *nopts_out)
 {
-	enum optclass class;
+	const char *unarged_opts;
+	const char *arged_opts;
+	const char *optatarged_opts;
+	const char *optarged_opts;
+	const char *unarged_longopts;
+	const char *arged_longopts;
+	const char *optarged_longopts;
 	const char *arg;
-	char opt;
 	size_t nopts = 0;
 
+	/* Get option syntax from the environment */
+	unarged_opts = get("SSHEXEC_OPTS_NO_ARG", "46AaCfGgKkMNnqsTtVvXxYy");
+	arged_opts = get("SSHEXEC_OPTS_ARG", "BbcDEeFIiJLlmOoPpQRSWw");
+	optatarged_opts = get("SSHEXEC_OPTS_OPT_ATTACHED_ARG", "");
+	optarged_opts = get("SSHEXEC_OPTS_OPT_ARG", "");
+	unarged_longopts = get("SSHEXEC_LONG_OPTS_NO_ARG", "");
+	arged_longopts = get("SSHEXEC_LONG_OPTS_ARG", "");
+	optarged_longopts = get("SSHEXEC_LONG_OPTS_OPT_ARG", "");
+
+	/* Count option arguments from the command line */
 	while (*argv) {
+		/* Break at the first non-option */
 		if (!strcmp(*argv, "--")) {
 			argv++;
 			break;
 		} else if ((*argv)[0] != '-' || !(*argv)[1]) {
 			break;
 		}
-		arg = &(*argv++)[1];
+
+		arg = *argv++;
 		nopts++;
-		while (*arg) {
-			opt = *arg++;
-			class = sshopts[(unsigned char)opt];
-			if (class == MANDATORY_ARGUMENT) {
-				if (*arg) {
-					break;
-				} else if (*argv) {
+		if (arg[1] == '-') {
+			/* Long option */
+			if (strchr(arg, '=')) {
+				/* Option has attach argument */
+			} else if (contains(unarged_longopts, arg)) {
+				/* Option cannot have an argument */
+			} else if (contains(arged_longopts, arg)) {
+				/* Option has detached argument  */
+				if (!*argv)
+					exitf("%s: argument missing for option %s\n", argv0, arg);
+				argv++;
+				nopts++;
+			} else if (contains(optarged_longopts, arg)) {
+				/* Long option with either detached argument or no argument */
+				if (*argv && **argv != '-') {
+					/* The option has a detached argument */
 					argv++;
 					nopts++;
-					break;
-				} else {
-					exitf("%s: argument missing for option -%c\n", argv0, opt);
 				}
-			} else if (class == NO_RECOGNISED) {
-				exitf("%s: unrecognised option -%c\n", argv0, opt);
+			} else {
+				exitf("%s: unrecognised option %s\n", argv0, arg);
+			}
+		} else {
+			/* Short option */
+			arg++;
+			while (*arg) {
+				if (strchr(unarged_opts, *arg)) {
+					/* Option cannot have an argument */
+				} else if (strchr(arged_opts, *arg)) {
+					/* Option must have an argument */
+					if (arg[1]) {
+						/* Argument is attached to option */
+						break;
+					} else if (argv[1]) {
+						/* Argument is detached from option */
+						argv++;
+						nopts++;
+						break;
+					} else {
+						exitf("%s: argument missing for option -%c\n", argv0, *arg);
+					}
+				} else if (strchr(optatarged_opts, *arg)) {
+					/* Option may have an attached argument, but it cannot have a detached argument */
+					break;
+				} else if (strchr(optarged_opts, *arg)) {
+					/* Option may have an attached or detached argument */
+					if (arg[1]) {
+						/* Argument is attached to option */
+					} else {
+						/* Either there is no argument, or it is detached from the option */
+						if (argv[1] && argv[1][0] != '-') {
+							/* Argument exist and is detached. We assume that if the next
+							 * argument in the command line is the option's argument unless
+							 * it starts with '-'. */
+							argv++;
+							nopts++;
+							break;
+						}
+					}
+				} else {
+					exitf("%s: unrecognised option -%c\n", argv0, *arg);
+				}
 			}
 		}
 	}
@@ -582,10 +666,8 @@ main(int argc_unused, char *argv[])
 		exitf("%s: could not allocate enough memory\n", argv0);
 	args[i++] = ssh;
 	if (is_sshcd) {
-		const char *pty_alloc_flag = getenv("SSHCD_PTY_ALLOC_FLAG");
-		if (!pty_alloc_flag)
-			args[i++] = "-t";
-		else if (*pty_alloc_flag)
+		const char *pty_alloc_flag = get("SSHCD_PTY_ALLOC_FLAG", "-t");
+		if (*pty_alloc_flag)
 			args[i++] = pty_alloc_flag;
 	}
 	memcpy(&args[i], opts, nopts * sizeof(*opts));

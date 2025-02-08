@@ -123,7 +123,7 @@ None.
 The following environment variables affects the execution of
 .BR sshcd :
 .TP
-.SH PATH
+.I PATH
 Default. See to the Base Definitions volume of POSIX.1-2017, Section 8.3, Other Environment Variables.
 This environment variable affects where the
 .B sshcd
@@ -132,13 +132,156 @@ utility can find the
 utility or
 .IR ssh-command .
 .TP
-.B SSHCD_PTY_ALLOC_FLAG
+.I SSHCD_PTY_ALLOC_FLAG
 Specifies the option to pass to
 .BR ssh (1)
 to tell SSH to allocate a pseudo terminal. If unset
 .B -t
 will be used. If set but empty, no flag will be passed to
 .BR ssh (1).
+.TP
+.I SSHEXEC_OPTS_NO_ARG
+List of options that
+.B sshexec
+shall interpret as
+.BR ssh (1)
+options that do not have any argument.
+(Default is
+.BR 46AaCfGgKkMNnqsTtVvXxYy ,
+meaning the options
+.BR -4 ,
+.BR -6 ,
+.BR -A ,
+.BR -a ,
+.BR -C ,
+.BR -f ,
+.BR -G ,
+.BR -g ,
+.BR -K ,
+.BR -k ,
+.BR -M ,
+.BR -N ,
+.BR -n ,
+.BR -q ,
+.BR -s ,
+.BR -T ,
+.BR -t ,
+.BR -V ,
+.BR -v ,
+.BR -X ,
+.BR -x ,
+.BR -Y ,
+and
+.BR -y .)
+.TP
+.I SSHEXEC_OPTS_ARG
+List of options that
+.B sshexec
+shall interpret as
+.BR ssh (1)
+options that have an argument.
+(Default is
+.BR BbcDEeFIiJLlmOoPpQRSWw ,
+meaning the options
+.BR -B ,
+.BR -b ,
+.BR -c ,
+.BR -D ,
+.BR -E ,
+.BR -e ,
+.BR -F ,
+.BR -I ,
+.BR -i ,
+.BR -J ,
+.BR -L ,
+.BR -l ,
+.BR -m ,
+.BR -O ,
+.BR -o ,
+.BR -P ,
+.BR -p ,
+.BR -Q ,
+.BR -R ,
+.BR -S ,
+.BR -W ,
+and
+.BR -w .)
+.TP
+.I SSHEXEC_OPTS_OPT_ATTACHED_ARG
+List of options that
+.B sshexec
+shall interpret as
+.BR ssh (1)
+options that have an argument only if
+there are additional characters after
+the option character in the same
+command line argument. (Default is
+the empty string, meaning no options.)
+.TP
+.I SSHEXEC_OPTS_OPT_ARG
+List of options that
+.B sshexec
+shall interpret as
+.BR ssh (1)
+options that have an argument if there
+are additional characters after
+the option character in the same
+command line argument or if argument is
+followed directly by another argument
+which does not start with a dash
+.RB ( - ).
+(Default is
+the empty string, meaning no options.)
+.TP
+.I SSHEXEC_LONG_OPTS_NO_ARG
+Space-separated list of long options that
+.B sshexec
+shall interpret as
+.BR ssh (1)
+options that do not have any argument
+unless it is followed directly by an
+equals sign
+.RB ( = )
+in the same command line argument.
+Options that do not start with two dashes
+.RB ( -- )
+are silently ignored. (Default is the
+empty string, meaning no options.)
+.TP
+.I SSHEXEC_LONG_OPTS_ARG
+Space-separated list of long options that
+.B sshexec
+shall interpret as
+.BR ssh (1)
+options that have an argument that must
+either be specified in the next command
+line argument or after an
+equals sign
+.RB ( = )
+the shall directly follow the option
+string in the same command line argument.
+Options that do not start with two dashes
+.RB ( -- )
+are silently ignored. (Default is the
+empty string, meaning no options.)
+.TP
+.I SSHEXEC_LONG_OPTS_OPT_ARG
+Space-separated list of long options that
+.B sshexec
+shall interpret as
+.BR ssh (1)
+options that have an argument if it is
+the option string is is directly followed
+by equals sign
+.RB ( = )
+in the same command line argument or if
+argument is followed directly by another
+argument which does not start with a dash
+.RB ( - ).
+Options that do not start with two dashes
+.RB ( -- )
+are silently ignored. (Default is the
+empty string, meaning no options.)
 .PP
 Other environment variables may affect the execution of the
 .BR ssh (1)

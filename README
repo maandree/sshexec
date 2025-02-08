@@ -148,6 +148,78 @@ OPERANDS
 		command must not contain an equals sign (=) or be just
 		a dash ("-").
 
+ENVIRONMENT VARIABLES
+	The following environment variables affects the execution of
+	sshexec:
+
+	PATH
+		Default. See to the Base Definitions volume of POSIX.1-2017,
+		Section 8.3, Other Environment Variables. This environment
+		variable affects where the sshexec utility can find the
+		ssh(1) utility or ssh-command.
+
+	SSHEXEC_OPTS_NO_ARG
+		List of options that sshexec shall interpret as ssh(1)
+		options that do not have any argument. (Default is
+		46AaCfGgKkMNnqsTtVvXxYy, meaning the options -4, -6, -A,
+		-a, -C, -f, -G, -g, -K, -k, -M, -N, -n, -q, -s, -T, -t,
+		-V, -v, -X, -x, -Y, and -y.)
+
+	SSHEXEC_OPTS_ARG
+		List of options that sshexec shall interpret as ssh(1)
+		options that have an argument. (Default is
+		BbcDEeFIiJLlmOoPpQRSWw, meaning the options -B, -b, -c,
+		-D, -E, -e, -F, -I, -i, -J, -L, -l, -m, -O, -o, -P, -p,
+		-Q, -R, -S, -W, and -w.)
+
+	SSHEXEC_OPTS_OPT_ATTACHED_ARG
+		List of options that sshexec shall interpret as ssh(1)
+		options that have an argument only if there are
+		additional characters after the option character in the
+		same command line argument. (Default is the empty
+		string, meaning no options.)
+
+	SSHEXEC_OPTS_OPT_ARG
+		List of options that sshexec shall interpret as ssh(1)
+		options that have an argument if there are additional
+		characters after the option character in the same
+		command line argument or if argument is followed
+		directly by another argument which does not start with
+		a dash (-). (Default is the empty string, meaning no
+		options.)
+
+	SSHEXEC_LONG_OPTS_NO_ARG
+		Space-separated list of long options that sshexec shall
+		interpret as ssh(1) options that do not have any
+		argument unless it is followed directly by an equals
+		sign (=) in the same command line argument. Options
+		that do not start with two dashes (--) are silently
+		ignored. (Default is the empty string, meaning no
+		options.)
+
+	SSHEXEC_LONG_OPTS_ARG
+		Space-separated list of long options that sshexec shall
+		interpret as ssh(1) options that have an argument that
+		must either be specified in the next command line
+		argument or after an equals sign (=) the shall directly
+		follow the option string in the same command line
+		argument. Options that do not start with two dashes
+		(--) are silently ignored. (Default is the empty string,
+		meaning no options.)
+
+	SSHEXEC_LONG_OPTS_OPT_ARG
+		Space-separated list of long options that sshexec shall
+		interpret as ssh(1) options that have an argument if
+		it is the option string is is directly followed by
+		equals sign (=) in the same command line argument or if
+		argument is followed directly by another argument which
+		does not start with a dash (-). Options that do not
+		start with two dashes (--) are silently ignored.
+		(Default is the empty string, meaning no options.)
+
+	Other environment variables may affect the execution of the
+	ssh(1) utility.
+
 BUGS
 	The remote shell must be sufficiently similar to sh(1posix).
 	Namely, it must support the cd builtin command and the commands
