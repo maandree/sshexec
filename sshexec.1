@@ -8,6 +8,7 @@ sshexec - run a command through ssh(1) with normal command syntax
 .RB [ {
 .RI [\fBssh=\fP ssh-command ]
 .RI [\fBdir=\fP directory ]
+.RB [ cd= ( strict | lax )]
 .RB [[\fIfd\fP]{ > , >> , >| , < , <> }[ & ] = \fIfile\fP]
 .BR } ]
 .RI [ ssh-option ]\ ...\,
@@ -106,6 +107,20 @@ In the remote, change working directory to
 .I directory
 before executing
 .IR command .
+.TP
+.B cd=strict
+Fail without executing the
+.I command
+if it's not possible to set
+.I directory
+as the remote working directory.
+.TP
+.B cd=lax
+Continue (but warn) executing the
+.I command
+even if it's not possible to set
+.I directory
+as the remote working directory.
 .TP
 .IB \fR[\fPfd\fP]\fP >= file
 After changing working directory (assuming one is specified),

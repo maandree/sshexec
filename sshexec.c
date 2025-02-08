@@ -19,7 +19,7 @@ static void
 usage(void)
 {
 	exitf("usage: %s [{ %s }] [ssh-option] ... destination command [argument] ...\n",
-	      argv0, "[ssh=command] [dir=directory] [[fd]{>,>>,>|,<>}[&]=file]");
+	      argv0, "[ssh=command] [dir=directory] [cd=(strict|lax)] [[fd]{>,>>,>|,<>}[&]=file]");
 }
 
 
@@ -129,6 +129,7 @@ main(int argc_unused, char *argv[])
 {
 	const char *dir = NULL;
 	const char *ssh = NULL;
+	const char *cd = NULL;
 	struct redirection *redirections = NULL;
 	size_t nredirections = 0;
 	char *destination;
@@ -140,6 +141,7 @@ main(int argc_unused, char *argv[])
 	char opt;
 	const char **args;
 	size_t i;
+	int strict_cd;
 
 	(void) argc_unused;
 
@@ -158,6 +160,7 @@ main(int argc_unused, char *argv[])
 		for (; *argv && strcmp(*argv, "}"); argv++) {
 			STORE_OPT(&ssh, "ssh")
 			STORE_OPT(&dir, "dir")
+			STORE_OPT(&cd, "cd")
 
 			p = *argv;
 			while (isdigit(*p))
@@ -201,6 +204,13 @@ main(int argc_unused, char *argv[])
 
 	if (!ssh)
 		ssh = "ssh";
+
+	if (!cd || !strcmp(cd, "strict"))
+		strict_cd = 1;
+	else if (!strcmp(cd, "lax"))
+		strict_cd = 0;
+	else
+		usage();
 
 	opts = argv;
 	nopts = 0;
@@ -263,7 +273,7 @@ dest_dir_checked:
 	if (dir) {
 		build_command_asis("cd -- ");
 		build_command_escape(dir);
-		build_command_asis(" && ");
+		build_command_asis(strict_cd ? " && " : " ; ");
 	}
 	build_command_asis("exec env --");
 	for (; *argv; argv++) {

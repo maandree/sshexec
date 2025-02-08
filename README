@@ -2,7 +2,7 @@ NAME
 	sshexec - run a command through ssh(1) with normal command syntax
 
 SYNOPSIS
-	sshexec [{ [ssh=ssh-command] [dir=directory]
+	sshexec [{ [ssh=ssh-command] [dir=directory] [cd=(strict|lax)]
 	        [[fd]{>,>>,>|,<,<>}[&]=file] }] [ssh-option] ...
 	        destination command [argument] ...
 
@@ -42,6 +42,15 @@ OPTIONS
 	dir=directory
 		In the remote, change working directory to directory
 		before executing command.
+
+	cd=strict
+		Fail without executing the command if it's not possible
+		to set directory as the remote working directory.
+
+	cd=lax
+		Continue (but warn) executing the command even if it's
+		not possible to set directory as the remote working
+		directory.
 
 	[fd]>=file
 		After changing working directory (assuming one is
