@@ -158,6 +158,10 @@ ENVIRONMENT VARIABLES
 		variable affects where the sshexec utility can find the
 		ssh(1) utility or ssh-command.
 
+	SSHEXEC_SSH
+		If set and non-empty, it overrides the default value of
+		ssh-command from ssh to the value of the variable.
+
 	SSHEXEC_OPTS_NO_ARG
 		List of options that sshexec shall interpret as ssh(1)
 		options that do not have any argument. (Default is

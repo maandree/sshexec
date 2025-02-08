@@ -140,6 +140,13 @@ to tell SSH to allocate a pseudo terminal. If unset
 will be used. If set but empty, no flag will be passed to
 .BR ssh (1).
 .TP
+.I SSHEXEC_SSH
+If set and non-empty, it overrides the default value of
+.I ssh-command
+from
+.B ssh
+to the value of the variable.
+.TP
 .I SSHEXEC_OPTS_NO_ARG
 List of options that
 .B sshexec

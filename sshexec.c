@@ -480,8 +480,11 @@ parse_sshexec_options(char *argv[])
 end_of_options:
 	/* Parse options and set defaults */
 
-	if (!ssh)
-		ssh = "ssh";
+	if (!ssh) {
+		ssh = get("SSHEXEC_SSH", "");
+		if (!*ssh)
+			ssh = "ssh";
+	}
 
 	if (!cd)
 		strict_cd = !is_sshcd;
