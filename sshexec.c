@@ -10,6 +10,7 @@
 
 
 static const char *argv0 = "sshexec";
+static int is_sshcd = 0;
 
 
 #define exitf(...) (fprintf(stderr, __VA_ARGS__), exit(255))
@@ -18,9 +19,11 @@ static const char *argv0 = "sshexec";
 static void
 usage(void)
 {
-	exitf("usage: %s [{ %s }] [ssh-option] ... destination command [argument] ...\n",
-	      argv0, "[ssh=command] [dir=directory] [cd=(strict|lax)] [[fd]{>,>>,>|,<>}[&]=file] "
-	             "[asis=asis-marker [nasis=asis-count]]");
+	exitf("usage: %s [{ [ssh=command]%s [cd=(strict|lax)]%s }] [ssh-option] ... destination%s\n",
+	      argv0,
+	      is_sshcd ? "" : " [dir=directory]",
+	      is_sshcd ? "" : " [[fd]{>,>>,>|,<>}[&]=file] [asis=asis-marker [nasis=asis-count]]",
+	      is_sshcd ? "" : " command [argument] ...");
 }
 
 
@@ -153,6 +156,9 @@ main(int argc_unused, char *argv[])
 	if (*argv)
 		argv0 = *argv++;
 
+	p = strrchr(argv0, '/');
+	is_sshcd = !strcmp(p ? &p[1] : argv0, "sshcd");
+
 #define STORE_OPT(VARP, OPT)\
 	if (!strncmp(*argv, OPT"=", sizeof(OPT))) {\
 		if (*(VARP) || !*(*(VARP) = &(*argv)[sizeof(OPT)]))\
@@ -164,6 +170,11 @@ main(int argc_unused, char *argv[])
 		argv++;
 		for (; *argv && strcmp(*argv, "}"); argv++) {
 			STORE_OPT(&ssh, "ssh")
+			STORE_OPT(&cd, "cd")
+
+			if (is_sshcd)
+				usage();
+
 			STORE_OPT(&dir, "dir")
 			STORE_OPT(&asis, "asis")
 			STORE_OPT(&nasis_str, "nasis")
@@ -211,7 +222,9 @@ main(int argc_unused, char *argv[])
 	if (!ssh)
 		ssh = "ssh";
 
-	if (!cd || !strcmp(cd, "strict"))
+	if (!cd)
+		strict_cd = !is_sshcd;
+	else if (!strcmp(cd, "strict"))
 		strict_cd = 1;
 	else if (!strcmp(cd, "lax"))
 		strict_cd = 0;
@@ -259,18 +272,23 @@ main(int argc_unused, char *argv[])
 	}
 
 	destination = *argv++;
-	if (!destination || !*argv)
+	if (!destination || (is_sshcd ? !!*argv : !*argv))
 		usage();
 
-	if (!strcmp(*argv, "-"))
+	if (!strcmp(destination, "-"))
 		exitf("%s: the command argument must not be \"-\"\n", argv0);
-	else if (strchr(*argv, '='))
+	else if (strchr(destination, '='))
 		exitf("%s: the command argument must contain an \'=\'\n", argv0);
 
-	if (!strncmp(destination, "sshexec://", sizeof("sshexec://") - 1U)) {
+	if (!is_sshcd && !strncmp(destination, "sshexec://", sizeof("sshexec://") - 1U)) {
 		memmove(&destination[sizeof("ssh") - 1U],
 		        &destination[sizeof("sshexec") - 1U],
 		        strlen(&destination[sizeof("sshexec") - 1U]) + 1U);
+		goto using_ssh_prefix;
+	} else if (is_sshcd && !strncmp(destination, "sshcd://", sizeof("sshcd://") - 1U)) {
+		memmove(&destination[sizeof("ssh") - 1U],
+		        &destination[sizeof("sshcd") - 1U],
+		        strlen(&destination[sizeof("sshcd") - 1U]) + 1U);
 		goto using_ssh_prefix;
 	} else if (!strncmp(destination, "ssh://", sizeof("ssh://") - 1U)) {
 	using_ssh_prefix:
@@ -284,12 +302,15 @@ main(int argc_unused, char *argv[])
 		*dest_dir_delim++ = '\0';
 		dir = dest_dir_delim;
 	}
-dest_dir_checked:
 
 	if (dir) {
 		build_command_asis("cd -- ");
 		build_command_escape(dir);
 		build_command_asis(strict_cd ? " && " : " ; ");
+	}
+	if (is_sshcd) {
+		build_command_asis("exec \"$SHELL\" -l");
+		goto command_constructed;
 	}
 	if (asis)
 		build_command_asis("( env --");
@@ -320,13 +341,21 @@ dest_dir_checked:
 			build_command_escape(redirections[i].escape);
 		}
 	}
+command_constructed:
 	finalise_command();
 
 	i = 0;
-	args = calloc(5 + nopts, sizeof(*args));
+	args = calloc(5U + (size_t)is_sshcd + nopts, sizeof(*args));
 	if (!args)
 		exitf("%s: could not allocate enough memory\n", argv0);
 	args[i++] = ssh;
+	if (is_sshcd) {
+		const char *pty_alloc_flag = getenv("SSHCD_PTY_ALLOC_FLAG");
+		if (!pty_alloc_flag)
+			args[i++] = "-t";
+		else if (*pty_alloc_flag)
+			args[i++] = pty_alloc_flag;
+	}
 	memcpy(&args[i], opts, nopts * sizeof(*opts));
 	i += nopts;
 	args[i++] = "--";

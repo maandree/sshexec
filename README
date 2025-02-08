@@ -158,4 +158,4 @@ BUGS
 	characters.
 
 SEE ALSO
-	ssh(1)
+	ssh(1), sshcd(1)

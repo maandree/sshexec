@@ -1,0 +1,211 @@
+.TH SSHCD 1 sshexec
+
+.SH NAME
+sshcd - open ssh(1) with a specific remote working directory
+
+.SH SYNOPSIS
+.B sshcd
+.RB [ {
+.RI [\fBssh=\fP ssh-command ]
+.RB [ cd= ( strict | lax )]
+.BR } ]
+.RI [ ssh-option ]\ ...\,
+.I destination
+
+.SH DESCRIPTION
+The
+.B sshcd
+utility is a wrapper for SSH that makes it lets the user
+specify the directory remote working directory.
+.PP
+.B sshcd
+passes any argument after
+.B }
+to
+.I ssh-command
+.RB ( ssh
+if not specified), except it may rewrite
+.I destination
+to remove information that's not supported by
+.BR ssh (1).
+
+.SH OPTIONS
+.B sshcd
+options may be placed at the very beginning enclosed with
+the arguments
+.B {
+and
+.BR } .
+.B sshcd
+options, if any, shall be placed in the same
+.B {
+.BR } -group.
+Any other option will be passed as is to the
+.BR ssh (1)
+utility or
+.IR ssh-command .
+The
+.B sshcd
+utility has a build it list of options recognised by the
+.BR ssh (1)
+utility and will not allow anything matching this list.
+The
+.B sshcd
+utility does not allow mixing options and operands: no
+option may be placed after
+.IR destination .
+.PP
+The following
+.B sshcd
+options are supported:
+.TP
+.BI ssh= ssh-command
+Instead of looking for
+.B ssh
+in
+.IR PATH ,
+the
+.B sshcd
+utility shall use
+.IR ssh-command ,
+which it will look for in
+.I PATH
+if it is only a file name (does not contain a slash
+.RB ( / )).
+.TP
+.B cd=strict
+Fail without executing the
+.I command
+if it's not possible to set
+.I directory
+as the remote working directory.
+.TP
+.B cd=lax
+Continue (but warn) executing the
+.I command
+even if it's not possible to set
+.I directory
+as the remote working directory.
+
+.SH OPERANDS
+The following operands are supported:
+.TP
+.I destination
+The destination to connect and log into. It shall be either in
+the form
+.RI [ user\fP\fB@ ] hostname [\fB:\fP directory ]
+or in the form
+.BR ssh [ cd ] :// [\fIuser @ ]\fIhostname\fP[ : \fIport\fP][ / \fIdirectory\fP].
+
+.I user
+shall be the name of the remote user. If not specified,
+the name of the local user running the utility will be used.
+
+.I hostname
+shall be the address to the remote machine.
+
+.I port
+shall be the port or service name for the port to
+connect to on the remote machine.
+
+.I directory
+shall be directory to change the remote working directory.
+
+.SH STDIN
+The
+.B sshcd
+utility itself does not use the standard input.
+
+.SH INPUT FILES
+None.
+
+.SH ENVIRONMENT VARIABLES
+The following environment variables affects the execution of
+.BR sshcd :
+.TP
+.SH PATH
+Default. See to the Base Definitions volume of POSIX.1-2017, Section 8.3, Other Environment Variables.
+This environment variable affects where the
+.B sshcd
+utility can find the
+.BR ssh (1)
+utility or
+.IR ssh-command .
+.TP
+.B SSHCD_PTY_ALLOC_FLAG
+Specifies the option to pass to
+.BR ssh (1)
+to tell SSH to allocate a pseudo terminal. If unset
+.B -t
+will be used. If set but empty, no flag will be passed to
+.BR ssh (1).
+.PP
+Other environment variables may affect the execution of the
+.BR ssh (1)
+utility.
+
+.SH ASYNCHRONOUS EVENTS
+Default.
+
+.SH STDOUT
+The
+.B sshcd
+utility itself does not use the standard output.
+
+.SH STDERR
+The standard error is used for diagnostic messages in the
+.B sshcd
+utility itself.
+
+.SH OUTPUT FILES
+None.
+
+.SH EXTENDED DESCRIPTION
+None.
+
+.SH EXIT STATUS
+The
+.B sshcd
+utility exits with the exit status of the
+.BR ssh (1)
+utility or with 255 if an error occurred.
+
+.SH CONSEQUENCES OF ERRORS
+Default.
+
+.SH APPLICATION USAGE
+None.
+
+.SH EXAMPLES
+None.
+
+.SH RATIONALE
+For historical reasons, the
+.B sshcd
+utility does not let the user add a command to run
+inside the directory. This also avoids problems; if the
+user want to run a command in a specific directory,
+.BR sshexec (1)
+lets the user do so in an intuitive manner; for other
+traditional syntax,
+.BR ssh (1)
+can still be used — specifying a
+.BR cd (1)
+command at the beginning shouldn't be a problem.
+
+.SH NOTES
+None.
+
+.SH BUGS
+None.
+
+.SH FUTURE DIRECTIONS
+None.
+
+.SH SEE ALSO
+.BR ssh (1),
+.BR sshexec (1)
+
+.SH AUTHORS
+Mattias Andrée
+.RI < m@maandree.se >
