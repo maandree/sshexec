@@ -199,7 +199,11 @@ build_command_reserve(size_t n)
 static void
 build_command_escape(const char *arg)
 {
+#define IS_ALWAYS_SAFE(C)   (isalnum((C)) || (C) == '_' || (C) == '/')
+#define IS_INITIAL_SAFE(C)  (isalpha((C)) || (C) == '_' || (C) == '/')
+
 	size_t n = 0;
+	size_t lfs = 0;
 
 	/* Quote empty string */
 	if (!*arg) {
@@ -208,7 +212,7 @@ build_command_escape(const char *arg)
 	}
 
 	/* If the string only contains safe characters, add it would escaping */
-	while (isalnum(arg[n]) || arg[n] == '_' || arg[n] == '/')
+	while (IS_ALWAYS_SAFE(arg[n]))
 		n += 1;
 	if (!arg[n]) {
 		build_command(arg, n);
@@ -217,22 +221,43 @@ build_command_escape(const char *arg)
 
 	/* Escape string, using quoted printf(1) statement */
 	build_command_asis("\"$(printf '");
-	goto start;
+	goto start; /* already have a count of safe initial characters, let's add them immidately */
 	while (*arg) {
-		build_command_reserve(4);
-		command[command_len++] = '\\';
-		command[command_len] = (((unsigned char)*arg >> 6) & 7) + '0';
-		command_len += (command[command_len] != '0');
-		command[command_len] = (((unsigned char)*arg >> 3) & 7) + '0';
-		command_len += (command[command_len] != '0');
-		command[command_len++] = ((unsigned char)*arg & 7) + '0';
-		arg = &arg[1];
+		/* Since process substation removes at least one terminal
+		 * LF, we must hold of on adding them */
+		if (*arg == '\n') {
+			lfs += 1;
+			arg = &arg[1];
+			continue;
+		}
 
+		/* Adding any held back LF */
+		if (lfs) {
+			build_command_reserve(lfs * 2U);
+			for (; lfs; lfs--) {
+				command[command_len++] = '\\';
+				command[command_len++] = 'n';
+			}
+		}
+
+		/* Character is unsafe, escape it */
+		if (!IS_ALWAYS_SAFE(*arg)) {
+			build_command_reserve(4);
+			command[command_len++] = '\\';
+			command[command_len] = (((unsigned char)*arg >> 6) & 7) + '0';
+			command_len += (command[command_len] != '0');
+			command[command_len] = (((unsigned char)*arg >> 3) & 7) + '0';
+			command_len += (command[command_len] != '0');
+			command[command_len++] = ((unsigned char)*arg & 7) + '0';
+			arg = &arg[1];
+		}
+
+		/* Add any safe characters as is */
 		n = 0;
-		while (isalpha(arg[n]) || arg[n] == '_' || arg[n] == '/')
+		while (IS_INITIAL_SAFE(arg[n]) || arg[n] == '_' || arg[n] == '/')
 			n += 1;
 		if (n) {
-			while (isalnum(arg[n]) || arg[n] == '_' || arg[n] == '/')
+			while (IS_ALWAYS_SAFE(arg[n]))
 				n += 1;
 		start:
 			build_command(arg, n);
@@ -240,7 +265,17 @@ build_command_escape(const char *arg)
 		}
 	}
 	build_command_asis("\\n')\"");
-	/* TODO sh(1) may remove all, not just the last LF */
+	/* Add any held back terminal LF's */
+	if (lfs) {
+		build_command_reserve(lfs + 2U);
+		command[command_len++] = '\'';
+		memset(&command[command_len], '\n', lfs);
+		command_len += lfs;
+		command[command_len++] = '\'';
+	}
+
+#undef IS_ALWAYS_SAFE
+#undef IS_INITIAL_SAFE
 }
 
 
