@@ -580,11 +580,12 @@ parse_ssh_options(char *argv[], size_t *nopts_out)
 			}
 		} else {
 			/* Short option */
+			char opt;
 			arg++;
-			while (*arg) {
-				if (strchr(unarged_opts, *arg)) {
+			while ((opt = *arg++)) {
+				if (strchr(unarged_opts, opt)) {
 					/* Option cannot have an argument */
-				} else if (strchr(arged_opts, *arg)) {
+				} else if (strchr(arged_opts, opt)) {
 					/* Option must have an argument */
 					if (arg[1]) {
 						/* Argument is attached to option */
@@ -595,18 +596,18 @@ parse_ssh_options(char *argv[], size_t *nopts_out)
 						nopts++;
 						break;
 					} else {
-						exitf("%s: argument missing for option -%c\n", argv0, *arg);
+						exitf("%s: argument missing for option -%c\n", argv0, opt);
 					}
-				} else if (strchr(optatarged_opts, *arg)) {
+				} else if (strchr(optatarged_opts, opt)) {
 					/* Option may have an attached argument, but it cannot have a detached argument */
 					break;
-				} else if (strchr(optarged_opts, *arg)) {
+				} else if (strchr(optarged_opts, opt)) {
 					/* Option may have an attached or detached argument */
-					if (arg[1]) {
+					if (*arg) {
 						/* Argument is attached to option */
 					} else {
 						/* Either there is no argument, or it is detached from the option */
-						if (argv[1] && argv[1][0] != '-') {
+						if (*argv && **argv != '-') {
 							/* Argument exist and is detached. We assume that if the next
 							 * argument in the command line is the option's argument unless
 							 * it starts with '-'. */
@@ -616,7 +617,7 @@ parse_ssh_options(char *argv[], size_t *nopts_out)
 						}
 					}
 				} else {
-					exitf("%s: unrecognised option -%c\n", argv0, *arg);
+					exitf("%s: unrecognised option -%c\n", argv0, opt);
 				}
 			}
 		}
