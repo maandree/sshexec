@@ -131,7 +131,8 @@ main(int argc_unused, char *argv[])
 	const char *ssh = NULL;
 	struct redirection *redirections = NULL;
 	size_t nredirections = 0;
-	const char *destination;
+	char *destination;
+	char *dest_dir_delim;
 	char **opts, *p;
 	size_t nopts;
 	enum optclass class;
@@ -239,6 +240,25 @@ main(int argc_unused, char *argv[])
 		exitf("%s: the command argument must not be \"-\"\n", argv0);
 	else if (strchr(*argv, '='))
 		exitf("%s: the command argument must contain an \'=\'\n", argv0);
+
+	if (!strncmp(destination, "sshexec://", sizeof("sshexec://") - 1U)) {
+		memmove(&destination[sizeof("ssh") - 1U],
+		        &destination[sizeof("sshexec") - 1U],
+		        strlen(&destination[sizeof("sshexec") - 1U]) + 1U);
+		goto using_ssh_prefix;
+	} else if (!strncmp(destination, "ssh://", sizeof("ssh://") - 1U)) {
+	using_ssh_prefix:
+		dest_dir_delim = strchr(&destination[sizeof("ssh://")], '/');
+	} else {
+		dest_dir_delim = strchr(destination, ':');
+	}
+	if (dest_dir_delim) {
+		if (dir)
+			exitf("%s: directory specified both in 'dir' option and in destination operand\n", argv0);
+		*dest_dir_delim++ = '\0';
+		dir = dest_dir_delim;
+	}
+dest_dir_checked:
 
 	if (dir) {
 		build_command_asis("cd -- ");

@@ -10,7 +10,7 @@ sshexec - run a command through ssh(1) with normal command syntax
 .RI [\fBdir=\fP directory ]
 .RB [[\fIfd\fP]{ > , >> , >| , < , <> }[ & ] = \fIfile\fP]
 .BR } ]
-[ssh-option] ...\,
+.RI [ ssh-option ]\ ...\,
 .I destination
 .I command
 .RI [ argument ]\ ...\,
@@ -27,11 +27,19 @@ passes any argument after
 to
 .I ssh-command
 .RB ( ssh
-if not specified), and only modifies
+if not specified), but it
+rewrites
 .I command
-.RB [ argument ]\ ...\,
-and inserts extra arguments after
+and the
+.IR argument s
+to one argument that can be passed into
+.BR ssh (1)
+to describe each argument as separate arguments.
+It may also rewrite
 .I destination
+to remove information that's not supported by
+.BR ssh (1)
+and inserts extra arguments after it
 (it may also add a
 .B --
 argument immediately before
@@ -188,14 +196,29 @@ is 0 (standard input).)
 The following operands are supported:
 .TP
 .I destination
-This operand is passed as is (without validation) to the
-.BR ssh (1)
-utility. The
-.BR ssh (1)
-utility will expect it the be either in the form
-.RI [ user\fP\fB@ ] hostname
+The destination to connect and log into. It shall be either in
+the form
+.RI [ user\fP\fB@ ] hostname [\fB:\fP directory ]
 or in the form
-.BR ssh:// [\fIuser @ ]\fIhostname\fP[ : \fIport\fP].
+.BR ssh [ exec ] :// [\fIuser @ ]\fIhostname\fP[ : \fIport\fP][ / \fIdirectory\fP].
+
+.I user
+shall be the name of the remote user. If not specified,
+the name of the local user running the utility will be used.
+
+.I hostname
+shall be the address to the remote machine.
+
+.I port
+shall be the port or service name for the port to
+connect to on the remote machine.
+
+.I directory
+shall be directory to change the remote working directory.
+This is an alternative to (with the exact same behaviour)
+to the
+.B dir
+option and cannot be combined with it.
 .TP
 .IR command \ [ argument ]\ ...\,
 Whereas the
