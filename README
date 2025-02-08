@@ -2,7 +2,8 @@ NAME
 	sshexec - run a command through ssh(1) with normal command syntax
 
 SYNOPSIS
-	sshexec [{ [ssh=ssh-command] [dir=directory] }] [ssh-option] ...
+	sshexec [{ [ssh=ssh-command] [dir=directory]
+	        [[fd]{>,>>,>|,<,<>}[&]=file] }] [ssh-option] ...
 	        destination command [argument] ...
 
 DESCRIPTION
@@ -10,12 +11,15 @@ DESCRIPTION
 	run commands directly in the SSH command.
 
 	sshexec passes any argument after } to ssh-command (ssh if not
-	specified), and only modifies command [argument] ... and inserts
-	extra arguments after destination (it may also add a -- argument
-	immediately before destination) to cause the remote shell it
-	change working directory to directory, if specified, and execute
-	the provided command and arguments as a regular command rather
-	than as shell code joined by together by spaces.
+	specified), but it rewrites command and the arguments to one
+	argument that can be passed into ssh(1) to describe each argument
+	as separate arguments. It may also rewrite destination to remove
+	information that's not supported by ssh(1) and inserts extra
+	arguments after it (it may also add a -- argument immediately
+	before destination) to cause the remote shell it change working
+	directory to directory, if specified, and execute the provided
+	command and arguments as a regular command rather than as shell
+	code joined by together by spaces.
 
 OPTIONS
 	sshexec options may be placed at the very beginning enclosed
@@ -39,14 +43,78 @@ OPTIONS
 		In the remote, change working directory to directory
 		before executing command.
 
+	[fd]>=file
+		After changing working directory (assuming one is
+		specified), create or truncate the specified file and
+		open it for writing, using file descriptor number fd.
+		(Default fd is 1 (standard output).)
+
+	[fd]>>=file
+		After changing working directory (assuming one is
+		specified), create the specified file if it does not
+		exist and open it for writing in append-mode, using
+		file descriptor number fd. (Default fd is 1
+		(standard output).)
+
+	[fd]>|=file
+		After changing working directory (assuming one is
+		specified), create the specified file, but fail if it
+		already exists, and open it for writing, using file
+		descriptor number fd. (Default fd is 1 (standard
+		output).)
+
+	[fd]<=file
+		After changing working directory (assuming one is
+		specified), open the specified file, for reading, using
+		file descriptor number fd. (Default fd is 0 (standard
+		input).)
+
+	[fd]<>=file
+		After changing working directory (assuming one is
+		specified), open the specified file, for reading and
+		writing, creating it if it does not already exist,
+		using file descriptor number fd. (Default fd is 0
+		(standard input).)
+
+	[fd]{>,>>,>|}&=file
+		Duplicate the file descriptor fd giving the new file
+		descriptor the number file. (Default fd is 1 (standard
+		output).)
+
+	[fd]{>,>>,>|}&=-
+		Close the file descriptor fd. (Default fd is 1
+		(standard output).)
+
+	[fd]{<,<>}&=file
+		Duplicate the file descriptor fd giving the new file
+		descriptor the number file. (Default fd is 0 (standard
+		input).)
+
+	[fd]{<,<>}&=-
+		Close the file descriptor fd. (Default fd is 0
+		(standard input).)
+
 OPERANDS
 	The following operands are supported:
 
 	destination
-		This operand is passed as is (without validation) to
-		the ssh(1) utility. The ssh(1) utility will expect it
-		the be either in the form [user@]hostname or in the
-		form ssh://[user@]hostname[:port].
+		The destination to connect and log into. It shall be
+		eitherin the form [user@]hostname[:directory] or in the
+		form ssh[exec]://[user@]hostname[:port][/directory].
+
+		user shall be the name of the remote user. If not
+		specified, the name of the local user running the	
+		utility will be used.
+
+		hostname shall be the address to the remote machine.
+
+		port shall be the port or service name for the port
+		to connect to on the remote machine.
+
+		directory shall be directory to change the remote
+		working directory. This is an alternative to (with the
+		exact same behaviour) to the dir option and cannot be
+		combined with it.
 
 	command [argument] ...
 		Whereas the ssh(1) utility would simply join the command
@@ -55,6 +123,18 @@ OPERANDS
 		sshexec utility forces the remote shell to treat each
 		of the as separate arguments and cause the shell to
 		executing them as a non-builtin command.
+
+		command must not contain an equals sign (=) or be just
+		a dash ("-").
+
+BUGS
+	The remote shell must be sufficiently similar to sh(1posix).
+	Namely, it must support the cd builtin command and the commands
+	exec and printf is expected by POSIX. Additionally, it must
+	support "$( )", ' ', and &&, and argument separation with the
+	SP character. The remote shell must also not treat any
+	alphanumeric character, underscore (_) or slash (/) as special
+	characters.
 
 SEE ALSO
 	ssh(1)
