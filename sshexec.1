@@ -211,6 +211,12 @@ utility forces the remote shell to treat each of the
 as separate arguments and cause the shell to executing
 them as a non-builtin command.
 
+.I command
+must not contain an equals sign
+.RB ( = )
+or be just a dash
+.RB (\(dq - \(dq).
+
 .SH STDIN
 The
 .B sshexec
@@ -272,7 +278,9 @@ None.
 None.
 
 .SH RATIONALE
-None.
+The restrictions on
+.I command
+is in place to avoid unspecified behaviour.
 
 .SH NOTES
 None.

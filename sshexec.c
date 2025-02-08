@@ -235,6 +235,11 @@ main(int argc_unused, char *argv[])
 	if (!destination || !*argv)
 		usage();
 
+	if (!strcmp(*argv, "-"))
+		exitf("%s: the command argument must not be \"-\"\n", argv0);
+	else if (strchr(*argv, '='))
+		exitf("%s: the command argument must contain an \'=\'\n", argv0);
+
 	if (dir) {
 		build_command_asis("cd -- ");
 		build_command_escape(dir);
