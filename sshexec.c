@@ -232,7 +232,7 @@ main(int argc_unused, char *argv[])
 	}
 
 	destination = *argv++;
-	if (!destination && !*argv)
+	if (!destination || !*argv)
 		usage();
 
 	if (dir) {
