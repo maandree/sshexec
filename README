@@ -4,8 +4,8 @@ NAME
 SYNOPSIS
 	sshexec [{ [ssh=ssh-command] [dir=directory] [cd=(strict|lax)]
 	        [[fd]{>,>>,>|,<,<>}[&]=file] [asis=asis-marker
-		[nasis=asis-count]] }] [ssh-option] ... destination
-		command [argument] ...
+	        [nasis=asis-count]] }] [ssh-option] ... destination
+	        command [argument] ...
 
 DESCRIPTION
 	The sshexec utility is a wrapper for SSH that makes it easy to
