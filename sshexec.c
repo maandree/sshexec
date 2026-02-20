@@ -587,10 +587,10 @@ parse_ssh_options(char *argv[], size_t *nopts_out)
 					/* Option cannot have an argument */
 				} else if (strchr(arged_opts, opt)) {
 					/* Option must have an argument */
-					if (arg[1]) {
+					if (*arg) {
 						/* Argument is attached to option */
 						break;
-					} else if (argv[1]) {
+					} else if (*argv) {
 						/* Argument is detached from option */
 						argv++;
 						nopts++;
@@ -657,7 +657,7 @@ main(int argc_unused, char *argv[])
 	if (!strcmp(destination, "-"))
 		exitf("%s: the command argument must not be \"-\"\n", argv0);
 	else if (strchr(destination, '='))
-		exitf("%s: the command argument must contain an \'=\'\n", argv0);
+		exitf("%s: the command argument must not contain an \'=\'\n", argv0);
 
 	/* Parse command line operands */
 	extract_directory_from_destination();
