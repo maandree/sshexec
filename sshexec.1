@@ -22,7 +22,7 @@ sshexec - run a command through ssh(1) with normal command syntax
 The
 .B sshexec
 utility is a wrapper for SSH that makes it easy to run commands
-directly in the SSH command.
+directly in the SSH command line.
 .PP
 .B sshexec
 passes any argument after
@@ -37,24 +37,24 @@ and the
 .IR argument s
 to one argument that can be passed into
 .BR ssh (1)
-to describe each argument as separate arguments.
+to describe each argument as a separate argument.
 It may also rewrite
 .I destination
-to remove information that's not supported by
+to remove information that is not supported by
 .BR ssh (1)
-and inserts extra arguments after it
+and insert extra arguments after it
 (it may also add a
 .B --
 argument immediately before
 .IR destination )
-to cause the remote shell it change working directory to
+to cause the remote shell to change working directory to
 .IR directory ,
 if specified, and execute the provided
 .I command
 and
 .IR argument s
 as a regular command rather than as shell code joined
-by together by spaces.
+together by spaces.
 
 .SH OPTIONS
 .B sshexec
@@ -73,7 +73,7 @@ utility or
 .IR ssh-command .
 The
 .B sshexec
-utility has a build it list of options recognised by the
+utility has a built-in list of options recognised by the
 .BR ssh (1)
 utility and will not allow anything matching this list.
 The
@@ -215,7 +215,7 @@ Any
 equal to
 .I asis-marker
 will be skipped over and instead the next argument
-(regardless of whether it to is equal to
+(regardless of whether it too is equal to
 .IR asis-marker )
 will be interpreted as raw shell code string that
 shall be inserted without escaping.
@@ -223,7 +223,7 @@ shall be inserted without escaping.
 .BI masis= asis-count
 If specified,
 .I asis-marker
-shall only have it's specified affect up to
+shall only have its specified effect up to
 .I asis-count
 times.
 
@@ -249,8 +249,8 @@ shall be the port or service name for the port to
 connect to on the remote machine.
 
 .I directory
-shall be directory to change the remote working directory.
-This is an alternative to (with the exact same behaviour)
+shall be the directory to change the remote working directory.
+This is an alternative (with the exact same behaviour)
 to the
 .B dir
 option and cannot be combined with it.
@@ -262,11 +262,11 @@ utility would simply join the
 .I command
 and
 .I argument
-arguments with a space between each of them as pass it
+arguments with a space between each of them and pass the result
 to the remote shell for execution, the
 .B sshexec
-utility forces the remote shell to treat each of the
-as separate arguments and cause the shell to executing
+utility forces the remote shell to treat each of them
+as a separate argument and causes the shell to execute
 them as a non-builtin command.
 
 .I command
@@ -284,7 +284,7 @@ utility itself does not use the standard input.
 None.
 
 .SH ENVIRONMENT VARIABLES
-The following environment variables affects the execution of
+The following environment variables affect the execution of
 .BR sshexec :
 .TP
 .I PATH

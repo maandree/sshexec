@@ -9,25 +9,25 @@ SYNOPSIS
 
 DESCRIPTION
 	The sshexec utility is a wrapper for SSH that makes it easy to
-	run commands directly in the SSH command.
+	run commands directly in the SSH command line.
 
 	sshexec passes any argument after } to ssh-command (ssh if not
-	specified), but it rewrites command and the arguments to one
+	specified), but it rewrites command and the arguments into one
 	argument that can be passed into ssh(1) to describe each argument
-	as separate arguments. It may also rewrite destination to remove
-	information that's not supported by ssh(1) and inserts extra
+	as a separate argument. It may also rewrite destination to remove
+	information that is not supported by ssh(1) and insert extra
 	arguments after it (it may also add a -- argument immediately
-	before destination) to cause the remote shell it change working
+	before destination) to cause the remote shell to change working
 	directory to directory, if specified, and execute the provided
 	command and arguments as a regular command rather than as shell
-	code joined by together by spaces.
+	code joined together by spaces.
 
 OPTIONS
 	sshexec options may be placed at the very beginning enclosed
 	with the arguments { and }. sshexec options, if any, shall be
 	placed in the same { }-group. Any other option will be passed
 	as is to the ssh(1) utility or ssh-command. The sshexec utility
-	has a build it list of options recognised by the ssh(1) utility
+	has a built-in list of options recognised by the ssh(1) utility
 	and will not allow anything matching this list. The sshexec
 	utility does not allow mixing options and operands: no option
 	may be placed after destination, such options will be treated
@@ -107,24 +107,24 @@ OPTIONS
 	asis=asis-marker
 		Any argument equal to asis-marker will be skipped over
 		and instead the next argument (regardless of whether
-		it to is equal to asis-marker) will be interpreted as
+		it too is equal to asis-marker) will be interpreted as a
 		raw shell code string that shall be inserted without
 		escaping.
 
-	masis=asis-count
-		If specified, asis-marker shall only have it's specified
-		affect up to asis-count times.
+	nasis=asis-count
+		If specified, asis-marker shall only have its specified
+		effect up to asis-count times.
 
 OPERANDS
 	The following operands are supported:
 
 	destination
 		The destination to connect and log into. It shall be
-		eitherin the form [user@]hostname[:directory] or in the
+		either in the form [user@]hostname[:directory] or in the
 		form ssh[exec]://[user@]hostname[:port][/directory].
 
 		user shall be the name of the remote user. If not
-		specified, the name of the local user running the	
+		specified, the name of the local user running the
 		utility will be used.
 
 		hostname shall be the address to the remote machine.
@@ -132,24 +132,24 @@ OPERANDS
 		port shall be the port or service name for the port
 		to connect to on the remote machine.
 
-		directory shall be directory to change the remote
-		working directory. This is an alternative to (with the
+		directory shall be the directory to change the remote
+		working directory. This is an alternative (with the
 		exact same behaviour) to the dir option and cannot be
 		combined with it.
 
 	command [argument] ...
 		Whereas the ssh(1) utility would simply join the command
 		and argument arguments with a space between each of
-		them as pass it to the remote shell for execution, the
-		sshexec utility forces the remote shell to treat each
-		of the as separate arguments and cause the shell to
-		executing them as a non-builtin command.
+		them and pass the result to the remote shell for execution,
+		the sshexec utility forces the remote shell to treat each
+		of them as a separate argument and causes the shell to
+		execute them as a non-builtin command.
 
 		command must not contain an equals sign (=) or be just
 		a dash ("-").
 
 ENVIRONMENT VARIABLES
-	The following environment variables affects the execution of
+	The following environment variables affect the execution of
 	sshexec:
 
 	PATH

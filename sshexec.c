@@ -61,7 +61,7 @@ struct redirection {
 
 
 /**
- * Command being constructor for ssh(1)
+ * Command being constructed for ssh(1)
  */
 static char *command = NULL;
 
@@ -191,7 +191,7 @@ build_command_escape(const char *arg)
 		return;
 	}
 
-	/* If the string only contains safe characters, add it would escaping */
+	/* If the string only contains safe characters, add it without escaping */
 	while (IS_ALWAYS_SAFE(arg[n]))
 		n += 1;
 	if (!arg[n]) {
@@ -201,10 +201,10 @@ build_command_escape(const char *arg)
 
 	/* Escape string, using quoted printf(1) statement */
 	build_command_asis("\"$(printf '");
-	goto start; /* already have a count of safe initial characters, let's add them immidately */
+	goto start; /* already have a count of safe initial characters, let's add them immediately */
 	while (*arg) {
-		/* Since process substation removes at least one terminal
-		 * LF, we must hold of on adding them */
+		/* Since process substitution removes at least one terminal
+		 * LF, we must hold off on adding them */
 		if (*arg == '\n') {
 			lfs += 1;
 			arg = &arg[1];
